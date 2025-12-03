@@ -21,6 +21,23 @@ class ModelAnalyzer:
         """Load a 3D model file using trimesh"""
         try:
             mesh = trimesh.load(file_path, force='mesh')
+            
+            # Handle multi-part files (3MF often contains multiple meshes)
+            if isinstance(mesh, list):
+                # Combine all meshes into a single mesh
+                if len(mesh) == 0:
+                    raise ValueError("File contains no meshes")
+                elif len(mesh) == 1:
+                    mesh = mesh[0]
+                else:
+                    # Concatenate multiple meshes
+                    mesh = trimesh.util.concatenate(mesh)
+            
+            # Handle Scene objects (some formats return scenes)
+            elif isinstance(mesh, trimesh.Scene):
+                # Dump the scene to a single mesh
+                mesh = mesh.dump(concatenate=True)
+            
             return mesh
         except Exception as e:
             raise ValueError(f"Failed to load 3D model: {str(e)}")
