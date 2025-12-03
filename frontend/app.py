@@ -211,7 +211,7 @@ def main():
     
     # Sidebar
     with st.sidebar:
-        st.image("https://via.placeholder.com/200x100/2c3e50/ffffff?text=KitForge", use_container_width=True)
+        st.image("https://via.placeholder.com/200x100/2c3e50/ffffff?text=KitForge", use_column_width=True)
         
         if st.session_state.token:
             st.success(f"👤 Logged in as: **{st.session_state.username}**")
@@ -322,7 +322,7 @@ def main():
             if result.get('preview_image_path') and Path(result['preview_image_path']).exists():
                 col1, col2 = st.columns([1, 2])
                 with col1:
-                    st.image(result['preview_image_path'], caption="3D Model Preview", use_container_width=True)
+                    st.image(result['preview_image_path'], caption="3D Model Preview", use_column_width=True)
                 with col2:
                     st.subheader(result['part_name'])
                     st.write(f"**File Hash:** `{result['file_hash'][:16]}...`")
