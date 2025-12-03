@@ -20,25 +20,47 @@ class ModelAnalyzer:
     def load_model(self, file_path: str) -> trimesh.Trimesh:
         """Load a 3D model file using trimesh"""
         try:
-            mesh = trimesh.load(file_path, force='mesh')
+            # Load without forcing format - let trimesh decide
+            loaded = trimesh.load(file_path)
             
-            # Handle multi-part files (3MF often contains multiple meshes)
-            if isinstance(mesh, list):
-                # Combine all meshes into a single mesh
-                if len(mesh) == 0:
+            # Handle different return types from trimesh.load()
+            
+            # Case 1: Scene object (most 3MF files)
+            if isinstance(loaded, trimesh.Scene):
+                # Extract all geometries from the scene
+                geometries = list(loaded.geometry.values())
+                
+                if len(geometries) == 0:
                     raise ValueError("File contains no meshes")
-                elif len(mesh) == 1:
-                    mesh = mesh[0]
+                elif len(geometries) == 1:
+                    mesh = geometries[0]
                 else:
-                    # Concatenate multiple meshes
-                    mesh = trimesh.util.concatenate(mesh)
+                    # Concatenate all geometries
+                    mesh = trimesh.util.concatenate(geometries)
             
-            # Handle Scene objects (some formats return scenes)
-            elif isinstance(mesh, trimesh.Scene):
-                # Dump the scene to a single mesh
-                mesh = mesh.dump(concatenate=True)
+            # Case 2: List of meshes
+            elif isinstance(loaded, list):
+                if len(loaded) == 0:
+                    raise ValueError("File contains no meshes")
+                elif len(loaded) == 1:
+                    mesh = loaded[0]
+                else:
+                    mesh = trimesh.util.concatenate(loaded)
+            
+            # Case 3: Single mesh (STL files typically)
+            elif isinstance(loaded, trimesh.Trimesh):
+                mesh = loaded
+            
+            # Case 4: Unknown type
+            else:
+                raise ValueError(f"Unexpected mesh type: {type(loaded)}")
+            
+            # Verify we have a valid mesh
+            if not isinstance(mesh, trimesh.Trimesh):
+                raise ValueError(f"Could not convert to Trimesh object, got {type(mesh)}")
             
             return mesh
+            
         except Exception as e:
             raise ValueError(f"Failed to load 3D model: {str(e)}")
     
